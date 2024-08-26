@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type TaxIncludedPriceJob struct {
 	TaxRate           float64
 	InputPrices       []float64
-	TaxIncludedPrices map[string]float64
+	TaxIncludedPrices map[string]string
 }
 
 func NewTaxIncludedPriceJob(taxRate float64) *TaxIncludedPriceJob {
@@ -19,41 +20,60 @@ func NewTaxIncludedPriceJob(taxRate float64) *TaxIncludedPriceJob {
 	}
 }
 
-func (job TaxIncludedPriceJob) LoadData() {
-	file, error := os.Open("prices.txt")
-	if error != nil {
-		fmt.Println("an error occurred")
-		fmt.Println(error)
+func (job *TaxIncludedPriceJob) LoadData() {
+	// Open the "prices.txt" file
+	file, err := os.Open("prices.txt")
+	if err != nil {
+		fmt.Println("An error occurred while opening the file:")
+		fmt.Println(err)
 		return
 	}
 
+	// Ensure the file is closed when the function exits
 	defer file.Close()
 
+	// Create a new Scanner to read the file
 	scanner := bufio.NewScanner(file)
 
 	var lines []string
-	// Scan() returns bool if nothing left to scan.
+	// Read the file line by line
 	for scanner.Scan() {
-		// scanner.Text() returns the last string read by scan.
+		// Append each line to the lines slice
 		lines = append(lines, scanner.Text())
 	}
 
-	err := scanner.Err()
-	if err != nil {
-		fmt.Println("an error occurred reading the file")
-		fmt.Println(error)
-		file.Close()
+	// Check for any errors that occurred during scanning
+	if err := scanner.Err(); err != nil {
+		fmt.Println("An error occurred while reading the file:")
+		fmt.Println(err)
 		return
 	}
 
-	
+	prices := make([]float64, len(lines))
+	for i, v := range lines {
+		floatPrice, err := strconv.ParseFloat(v, 64)
+
+		if err != nil {
+			fmt.Println("An error occurred while converting price string to float:")
+			fmt.Println(err)
+			file.Close()
+			return
+		}
+
+		prices[i] = floatPrice
+	}
+	// receiver arg must be pointer so that this is persisted to the job and not a copy.
+	job.InputPrices = prices
 }
 
-func (job TaxIncludedPriceJob) Process() {
-	result := make(map[string]float64)
+func (job *TaxIncludedPriceJob) Process() {
+	job.LoadData()
+
+	result := make(map[string]string)
 
 	for _, price := range job.InputPrices {
-		result[fmt.Sprintf("%.2f", price)] = price * (1 + job.TaxRate)
+		taxIncludedPrice := price * (1 + job.TaxRate)
+		result[fmt.Sprintf("%.2f", price)] = fmt.Sprintf("%.2f", taxIncludedPrice)
 	}
 	fmt.Println(result)
 }
