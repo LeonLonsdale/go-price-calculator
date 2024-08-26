@@ -1,11 +1,10 @@
 package prices
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 
 	"github.com/LeonLonsdale/go-price-calculator/conversion"
+	"github.com/LeonLonsdale/go-price-calculator/filemanager"
 )
 
 type TaxIncludedPriceJob struct {
@@ -21,31 +20,12 @@ func NewTaxIncludedPriceJob(taxRate float64) *TaxIncludedPriceJob {
 	}
 }
 
+// receiver arg must be pointer so that this is persisted to the job and not a copy.
 func (job *TaxIncludedPriceJob) LoadData() {
-	// Open the "prices.txt" file
-	file, err := os.Open("prices.txt")
+
+	lines, err := filemanager.ReadLines("prices.txt")
+
 	if err != nil {
-		fmt.Println("An error occurred while opening the file:")
-		fmt.Println(err)
-		return
-	}
-
-	// Ensure the file is closed when the function exits
-	defer file.Close()
-
-	// Create a new Scanner to read the file
-	scanner := bufio.NewScanner(file)
-
-	var lines []string
-	// Read the file line by line
-	for scanner.Scan() {
-		// Append each line to the lines slice
-		lines = append(lines, scanner.Text())
-	}
-
-	// Check for any errors that occurred during scanning
-	if err := scanner.Err(); err != nil {
-		fmt.Println("An error occurred while reading the file:")
 		fmt.Println(err)
 		return
 	}
@@ -54,11 +34,9 @@ func (job *TaxIncludedPriceJob) LoadData() {
 	if error != nil {
 		fmt.Println("An error occurred while converting price string to float:")
 		fmt.Println(error)
-		file.Close()
 		return
 	}
 
-	// receiver arg must be pointer so that this is persisted to the job and not a copy.
 	job.InputPrices = prices
 }
 
