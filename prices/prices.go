@@ -23,27 +23,30 @@ func NewTaxIncludedPriceJob(iomanager iomanager.IOManager, taxRate float64) *Tax
 }
 
 // receiver arg must be pointer so that this is persisted to the job and not a copy.
-func (job *TaxIncludedPriceJob) LoadData() {
+func (job *TaxIncludedPriceJob) LoadData() error {
 
 	lines, err := job.IOManager.ReadLines()
 
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	prices, error := conversion.StringsToFloat(lines)
 	if error != nil {
-		fmt.Println("An error occurred while converting price string to float:")
-		fmt.Println(error)
-		return
+		return err
 	}
 
 	job.InputPrices = prices
+
+	return nil
 }
 
-func (job *TaxIncludedPriceJob) Process() {
-	job.LoadData()
+func (job *TaxIncludedPriceJob) Process() error {
+	err := job.LoadData()
+
+	if err != nil {
+		return err
+	}
 
 	result := make(map[string]string)
 
@@ -54,5 +57,10 @@ func (job *TaxIncludedPriceJob) Process() {
 
 	job.TaxIncludedPrices = result
 
-	job.IOManager.WriteResult(job)
+	err = job.IOManager.WriteResult(job)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

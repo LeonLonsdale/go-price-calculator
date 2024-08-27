@@ -19,6 +19,11 @@ func main() {
 			return
 		}
 		job := prices.NewTaxIncludedPriceJob(cmd, taxRate)
-		job.Process()
+		err = job.Process()
+		if err != nil {
+			fmt.Println("unable to process job")
+			fmt.Println(err)
+			return
+		}
 	}
 }
