@@ -37,14 +37,11 @@ func (fm FileManager) ReadLines() ([]string, error) {
 	scanner := bufio.NewScanner(file)
 
 	var lines []string
-	// Read the file line by line
 	for scanner.Scan() {
-		// Append each line to the lines slice
 		lines = append(lines, scanner.Text())
 	}
 
 	if err := scanner.Err(); err != nil {
-		file.Close()
 		return nil, err
 	}
 
@@ -66,7 +63,6 @@ func (fm FileManager) WriteResult(data any) error {
 
 	err = encoder.Encode(data)
 	if err != nil {
-		file.Close()
 		return errors.New("unable to encode data to JSON")
 	}
 
